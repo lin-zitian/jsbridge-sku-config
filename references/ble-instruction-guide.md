@@ -2,6 +2,31 @@
 
 本文档说明哪些 instance 需要配置自定义 BLE 指令，以及如何配置。
 
+**完整的固定指令列表**: 请查看 `#[[file:references/fixed-ble-instructions.md]]`
+
+## 核心规则
+
+### 规则 1: 固定指令能力（无需 action）
+以下 7 个 instance 使用固定 cmdType，**不需要配置 action**：
+1. powerSwitch (turn)
+2. brightness (brightness)
+3. colorRgb (colorwc/color)
+4. colorTemperatureK (colorwc)
+5. lightScene (外部填充)
+6. diyScene (外部填充)
+7. snapshot (外部填充)
+
+### 规则 2: 其他所有能力都需要 action
+**所有不在上述列表中的 instance 都需要配置 action**。
+
+如果用户暂时无法提供：
+```javascript
+action: {
+  // TODO: 请提供 BLE 指令配置
+  // write: [{ bleDefine: ['33', '...'], valIndex: [2, 3] }]
+}
+```
+
 ## 指令配置分类
 
 ### 特殊设备类型说明

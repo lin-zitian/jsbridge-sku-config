@@ -80,6 +80,9 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
 - **产品类别**：参考 `#[[file:references/device-types.md]]`，默认：devices.types.light
 - **产品名称**：设备的英文名称
 - **goodsType**：商品类型（必须询问用户）
+  - **数据类型**：数字（Number）
+  - 如果用户提供：使用数字格式（如：`goodsType: 69`、`goodsType: 321`）
+  - 如果用户未提供：使用空字符串（`goodsType: ''`）
 
 **特殊设备类型**：
 - 如果是制冰机（`devices.types.ice_maker`），参考 `#[[file:references/ice-maker-guide.md]]`
@@ -102,39 +105,128 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
 #### 2.4 音乐模式配置（如果包含 musicMode）
 - **重要**：音乐模式参数通常后期提供
 - **当前操作**：
-  1. 在 musicMode capability 的 options 中添加 TODO 注释
-  2. 在代码中创建空的 MusicMode 常量数组，添加 TODO 注释
-  3. 参考 H1232 的音乐模式实现结构
-  4. 使用 `modeLanguageConst` 枚举类作为音乐模式名称
-  5. 配置 musicMode 的 BLE 指令（bleDefine 和 valIndex）
+  1. musicMode 字段的 options 保持为空数组 `[]`
+  2. **必须配置完整的 action**（BLE 指令）：
+     ```javascript
+     action: {
+       write: [
+         {
+           bleDefine: ['33', '05', '13', '05', '32', '00', '01', 'ff', 'ff', 'ff'],
+           valIndex: [3, 4, 5, 6, 7, 8, 9]
+         }
+       ]
+     }
+     ```
+     **为什么需要 action？**
+     - action 用于处理音乐模式的**动态参数**（sensitivity, autoColor, rgb）
+     - MusicMode 常量中的 ctrData 是**预定义的完整模式指令**
+     - 两者配合使用：action 处理参数调整，MusicMode 处理模式切换
+     - 详细说明请参考：`#[[file:references/action-role-explanation.md]]`
+  3. 在代码中创建空的 MusicMode 常量数组，添加 TODO 注释
+  4. 参考 H1232 的音乐模式实现结构
+  5. 使用 `modeLanguageConst` 枚举类作为音乐模式名称
 - **后续操作**：
   - 用户需要再次唤醒 skill 配置音乐模式
   - 提供音乐模式名称和对应的 BLE 指令数据
+
+#### 2.4.1 外部填充数据说明
+
+以下 instance 的 options 数据由外部系统填充，**禁止编造数据**：
+
+1. **lightScene** (灯光场景)
+   ```javascript
+   {
+     instance: InstanceEnum.lightScene.value,
+     type: 'devices.capabilities.dynamic_scene',
+     ctrlPlatformSupported: ['openApi'],
+     parameters: {
+       dataType: 'ENUM',
+       options: []  // 外部填充，保持为空数组
+     }
+   }
+   ```
+
+2. **diyScene** (DIY 场景)
+   ```javascript
+   {
+     instance: InstanceEnum.diyScene.value,
+     type: 'devices.capabilities.dynamic_scene',
+     ctrlPlatformSupported: ['openApi'],
+     parameters: {
+       dataType: 'ENUM',
+       options: []  // 外部填充，保持为空数组
+     }
+   }
+   ```
+
+3. **snapshot** (快照)
+   ```javascript
+   {
+     instance: InstanceEnum.snapshot.value,
+     type: 'devices.capabilities.dynamic_scene',
+     ctrlPlatformSupported: ['openApi'],
+     payloadDefine: {
+       cmdType: 'ptReal'
+     },
+     parameters: {
+       dataType: 'ENUM',
+       options: []  // 外部填充，保持为空数组
+     }
+   }
+   ```
+
+4. **musicMode** 的 musicMode 字段
+   ```javascript
+   {
+     fieldName: 'musicMode',
+     dataType: 'ENUM',
+     required: true,
+     options: []  // 后续填充，保持为空数组
+   }
+   ```
+
+⚠️ **关键点**:
+- lightScene、diyScene、snapshot 的 options 必须为空数组 `[]`
+- musicMode 的 musicMode 字段 options 必须为空数组 `[]`
+- **musicMode 必须包含完整的 action 配置**（即使 options 为空）
+- 不要编造这些字段的数据
 
 #### 2.5 BLE 指令配置（根据能力类型）
 
 **重要**：根据用户选择的 instance，判断哪些需要配置自定义 BLE 指令。
 
-详细的 BLE 指令配置指南请参考：`#[[file:references/ble-instruction-guide.md]]`
+详细的固定指令列表请参考：`#[[file:references/fixed-ble-instructions.md]]`
 
 ##### 配置原则
 
-1. **无需配置的 Instance**（使用标准 cmdType）
-   - `powerSwitch`, `brightness`, `colorRgb`, `colorTemperatureK`
-   - `lightScene`, `diyScene`, `snapshot`
-   - 这些 instance 使用标准指令，无需询问用户
+**固定指令能力（无需 action 配置）**:
+- `powerSwitch` (cmdType: turn)
+- `brightness` (cmdType: brightness)
+- `colorRgb` (cmdType: colorwc 或 color)
+- `colorTemperatureK` (cmdType: colorwc)
+- `lightScene` (options 为空数组，外部填充)
+- `diyScene` (options 为空数组，外部填充)
+- `snapshot` (options 为空数组，外部填充)
 
-2. **需要配置的 Instance**（使用 ptReal/multiSync cmdType）
-   - `segmentedColorRgb`, `segmentedBrightness`, `musicMode`
-   - `gradientToggle`, `mainLightToggle`, `backgroundLightToggle`
-   - `leftLightToggle`, `rightLightToggle`, `nightlightToggle`
-   - `workMode`, `humidity`
-   - 这些 instance 必须询问用户提供 BLE 指令
+这些 instance 使用标准 cmdType，**不需要配置 action**。
+
+**需要 action 配置的能力**:
+- `segmentedColorRgb`, `segmentedBrightness`
+- **`musicMode`** (必须配置 action，即使 musicMode 字段 options 为空)
+- `gradientToggle`, `mainLightToggle`, `backgroundLightToggle`
+- `leftLightToggle`, `rightLightToggle`, `nightlightToggle`
+- `workMode`, `humidity` (部分设备)
+- `iceMakingToggle`, `precoolToggle` (制冰机)
+- `nightlightScene` (需要场景选项)
+- **所有其他不在固定指令列表中的 instance**
+
+这些 instance 必须配置 action（BLE 指令）。
 
 ##### 配置流程
 
 1. **识别需要配置的 Instance**
    - 检查用户选择的 instance 列表
+   - 对照固定指令列表
    - 标记哪些需要配置 BLE 指令
 
 2. **询问用户配置**（仅针对需要配置的 instance）
@@ -142,10 +234,22 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
    - 数据位置索引 (valIndex)：数字数组，如 `[4, 5, 6]`
    - 特殊参数：根据 instance 类型询问（段数、模式列表、范围等）
 
-3. **提供参考值**
-   - 如果用户暂时无法提供，可以使用参考 SKU（如 H1232）的指令
-   - 在任务清单中标记需要确认
-   - 提醒用户后续需要根据实际设备更新
+3. **如果用户暂时无法提供 BLE 指令**
+   - 配置空 action 对象
+   - 添加 TODO 注释提示用户填写
+   - 在任务清单中标记需要配置
+   
+   ```javascript
+   action: {
+     // TODO: 请提供 BLE 指令配置
+     // write: [
+     //   {
+     //     bleDefine: ['33', '05', '...'],
+     //     valIndex: [2, 3, ...]
+     //   }
+     // ]
+   }
+   ```
 
 4. **验证配置**
    - bleDefine 是否为有效的十六进制字符串数组
@@ -194,7 +298,7 @@ const Endpoint = {
   productCategory: '[CATEGORY]',
   productName: '[NAME]',
   description: '',
-  goodsType: '',
+  goodsType: '',  // 数字类型（如：69, 321）或空字符串 ''
   capabilities: [
     // 根据用户需求配置 capabilities
   ]
@@ -279,7 +383,7 @@ const [instanceName] = {
   - productSku: [SKU编号]
   - productCategory: [类别]
   - productName: [名称]
-  - goodsType: [商品类型]
+  - goodsType: [商品类型]（数字，如：69, 321；或空字符串 ''）
 - [x] 配置 capabilities（共 [N] 个功能）
 
 ### 🔧 需要用户确认的配置
@@ -313,6 +417,29 @@ const [instanceName] = {
 - [ ] 配置方式：唤醒 skill 说 "配置 [SKU] 的音乐模式"
 - [ ] 参考示例：H1232 的 MusicMode 结构
 
+### ⚠️ 需要配置 BLE 指令的能力（如果有）
+
+以下 instance 需要提供 BLE 指令配置：
+
+- [ ] **[instanceName]**: 当前为空 action + TODO 注释
+  - 需要提供: bleDefine 数组和 valIndex 数组
+  - 参考: H1232 或其他类似 SKU 的配置
+  - 配置文档: `references/fixed-ble-instructions.md`
+
+**说明**:
+- 固定指令能力（powerSwitch, brightness, colorRgb, colorTemperatureK, lightScene, diyScene, snapshot）不需要 action
+- 其他所有能力都需要配置 action
+- 如果暂时无法提供，已添加 TODO 注释，后续需要补充
+
+### 📝 下一步操作建议
+1. 检查生成的代码是否符合预期
+2. 根据实际设备调整参数范围
+3. **配置需要 action 的 instance 的 BLE 指令**（如果有 TODO 标记）
+4. 测试 getMqttPayload 函数
+5. 如有音乐模式，准备音乐模式数据后再次配置
+6. 如有新 instance，更新 utils/common.js
+7. 验证 README.md 中的使用示例
+
 ### ⚠️ 新 Instance 需要添加（如果有）
 - [ ] 以下 instance 需要添加到 `jsbridge-be/utils/common.js` 的 InstanceEnum 中：
   ```javascript
@@ -323,14 +450,6 @@ const [instanceName] = {
     BaseDataType: DataTypeEnum.[TYPE]
   }
   ```
-
-### 📝 下一步操作建议
-1. 检查生成的代码是否符合预期
-2. 根据实际设备调整参数范围
-3. 测试 getMqttPayload 函数
-4. 如有音乐模式，准备音乐模式数据后再次配置
-5. 如有新 instance，更新 utils/common.js
-6. 验证 README.md 中的使用示例
 
 ### 💡 提示
 - 所有配置文件已生成在 `jsbridge-be/packages/[SKU]/`
@@ -445,7 +564,7 @@ action: {
    正在为 SKU [编号] 创建配置
    产品类别: [类别]
    产品名称: [名称]
-   商品类型: [goodsType]
+   商品类型: [goodsType]（数字或空字符串）
    支持功能: [功能列表]
    ```
 

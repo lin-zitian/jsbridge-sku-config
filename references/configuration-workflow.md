@@ -45,6 +45,9 @@ SKU: H7200
 - ✅ 产品类别（默认：devices.types.light）
 - ✅ 产品名称
 - ✅ **goodsType**（必须询问）
+  - 数据类型：数字（Number）
+  - 用户提供时：使用数字（如：69, 321, 184）
+  - 用户未提供时：使用空字符串 ''
 
 ### 2.2 色温配置（如果有 colorTemperatureK）
 询问用户：
@@ -132,7 +135,17 @@ SKU: H7200
 
 ### src/index.mjs
 包含：
-- Endpoint 配置
+- Endpoint 配置（goodsType 为数字或空字符串）
+  ```javascript
+  const Endpoint = {
+    productSku: 'H1234',
+    productCategory: 'devices.types.light',
+    productName: 'RGBIC Light',
+    description: '',
+    goodsType: 69,  // 数字类型，如果用户未提供则为 ''
+    capabilities: [...]
+  };
+  ```
 - MusicMode 常量（如果需要，带 TODO）
 - 核心函数实现
 - 导出（只使用新方法）
@@ -262,6 +275,7 @@ Skill 操作：
 
 ### 配置完整性
 - [ ] Endpoint 信息完整（productSku、productCategory、productName、goodsType）
+- [ ] goodsType 数据类型正确（数字或空字符串 ''）
 - [ ] 所有 capabilities 配置正确
 - [ ] 色温范围合理（如果有）
 - [ ] 分段数量正确（如果有）

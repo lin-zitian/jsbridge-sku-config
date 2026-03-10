@@ -87,8 +87,14 @@ action: {
   write: [{ bleDefine: ['33', '05', '04'], valIndex: [3] }],
   read: ['aa', '05', '04']
 },
-payloadDefine: { cmdType: 'ptReal' }
+payloadDefine: { cmdType: 'ptReal' },
+parameters: {
+  dataType: 'ENUM',
+  options: []  // 外部系统填充，保持为空数组
+}
 ```
+
+**注意**: options 由外部系统填充，不要编造数据
 
 #### diyScene - 自定义场景
 ```javascript
@@ -96,8 +102,14 @@ action: {
   write: [{ bleDefine: ['33', '05', '05', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00', '00'], valIndex: [3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13, 14, 15, 16, 17, 18, 19] }],
   read: ['aa', '05', '05']
 },
-payloadDefine: { cmdType: 'ptReal' }
+payloadDefine: { cmdType: 'ptReal' },
+parameters: {
+  dataType: 'ENUM',
+  options: []  // 外部系统填充，保持为空数组
+}
 ```
+
+**注意**: options 由外部系统填充，不要编造数据
 
 #### snapshot - 快照
 ```javascript
@@ -105,8 +117,14 @@ action: {
   write: [{ bleDefine: ['33', '05', '06'], valIndex: [3] }],
   read: ['aa', '05', '06']
 },
-payloadDefine: { cmdType: 'ptReal' }
+payloadDefine: { cmdType: 'ptReal' },
+parameters: {
+  dataType: 'ENUM',
+  options: []  // 外部系统填充，保持为空数组
+}
 ```
+
+**注意**: options 由外部系统填充，不要编造数据
 
 ### 需要 BLE 配置的指令
 
@@ -202,7 +220,8 @@ payloadDefine: { cmdType: 'multiSync' }
 询问用户:
 1. 是否支持音乐模式? (musicMode)
 2. 如果支持,音乐模式数据是否已提供?
-3. 如果未提供,添加 TODO 标记
+3. 如果未提供,musicMode 字段的 options 保持为空数组
+4. **重要**: 即使 options 为空,也必须配置完整的 action (BLE 指令)
 
 ### Step 6: 确认多灯头控制
 询问用户:
@@ -262,15 +281,21 @@ payloadDefine: { cmdType: 'multiSync' }
    - lightScene/diyScene/snapshot 使用 `ptReal`
    - 其他使用 `multiSync`
 
-2. **色温范围**: 默认2000-9000K,需要确认具体范围
+2. **外部填充数据**:
+   - lightScene、diyScene、snapshot 的 options 必须为空数组 `[]`
+   - musicMode 的 musicMode 字段 options 必须为空数组 `[]`
+   - **禁止编造这些字段的数据**
 
-3. **分段数量**: 常见10/15/20/40段,需要确认
-
-4. **音乐模式**: 
-   - 数据通常后期提供
+3. **音乐模式**: 
+   - musicMode 字段 options 为空数组
+   - **必须配置完整的 action** (BLE 指令)
    - 使用 `modeLanguageConst` 枚举
    - 参考 H1232 结构
 
-5. **多灯头**: 不同灯头指令地址不同,需要确认
+4. **色温范围**: 默认2000-9000K,需要确认具体范围
 
-6. **ctrlPlatformSupported**: 新 SKU 只使用 `['openApi']`
+5. **分段数量**: 常见10/15/20/40段,需要确认
+
+6. **多灯头**: 不同灯头指令地址不同,需要确认
+
+7. **ctrlPlatformSupported**: 新 SKU 只使用 `['openApi']`
