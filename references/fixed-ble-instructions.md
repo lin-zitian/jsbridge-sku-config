@@ -4,7 +4,20 @@
 
 ## 固定指令能力（无需 action 配置）
 
-以下 instance 使用标准的 cmdType，不需要配置 action：
+以下 8 个 instance 使用标准的 cmdType 或有特殊处理，不需要配置 action：
+
+1. **powerSwitch** - cmdType: 'turn'
+2. **brightness** - cmdType: 'brightness'
+3. **colorRgb** - cmdType: 'colorwc' 或 'color'
+4. **colorTemperatureK** - cmdType: 'colorwc'
+5. **lightScene** - options 为空数组，外部填充
+6. **diyScene** - options 为空数组，外部填充
+7. **snapshot** - options 为空数组，外部填充，需要 payloadDefine
+8. **dreamViewToggle** (盛宴开关) - cmdType: 'ptReal'，特殊处理
+
+---
+
+## 详细说明
 
 ### 1. powerSwitch (电源开关)
 - **cmdType**: `turn`
@@ -153,6 +166,32 @@
     dataType: 'ENUM',
     options: []  // 外部填充
   }
+}
+```
+
+---
+
+### 8. dreamViewToggle (盛宴开关)
+- **cmdType**: `ptReal`
+- **说明**: 盛宴功能开关，有特殊的内置处理逻辑
+- **无需 action 配置**
+
+```javascript
+{
+  instance: InstanceEnum.dreamViewToggle.value,
+  type: 'devices.capabilities.toggle',
+  ctrlPlatformSupported: ['openApi'],
+  payloadDefine: {
+    cmdType: 'ptReal'
+  },
+  parameters: {
+    dataType: 'ENUM',
+    options: [
+      { name: 'on', value: 1 },
+      { name: 'off', value: 0 }
+    ]
+  }
+  // ❌ 不需要 action
 }
 ```
 

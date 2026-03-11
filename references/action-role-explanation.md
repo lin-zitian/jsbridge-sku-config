@@ -351,7 +351,7 @@ function musicModeAnalysis(input = {}, capaInstance = {}) {
 
 ## 总结
 
-### 固定指令能力（7 个，无需 action）
+### 固定指令能力（8 个，无需 action）
 
 1. **powerSwitch** - cmdType: 'turn'
 2. **brightness** - cmdType: 'brightness'
@@ -360,6 +360,7 @@ function musicModeAnalysis(input = {}, capaInstance = {}) {
 5. **lightScene** - 外部填充
 6. **diyScene** - 外部填充
 7. **snapshot** - 外部填充
+8. **dreamViewToggle** (盛宴开关) - cmdType: 'ptReal'，特殊处理
 
 ### 自定义指令能力（需要 action）
 

@@ -4,6 +4,25 @@
 
 ## 外部填充字段列表
 
+## 外部填充字段列表
+
+### 快速对比表
+
+| 字段 | dataType | options | payloadDefine | 说明 |
+|------|----------|---------|---------------|------|
+| **lightScene** | `ENUM` | `[]` | ❌ 不需要 | 灯光场景 |
+| **diyScene** | `ENUM` | `[]` | ❌ 不需要 | DIY 场景 |
+| **snapshot** | `ENUM` | `[]` | ✅ 需要 `{ cmdType: 'ptReal' }` | 快照 |
+| **musicMode 字段** | `ENUM` | `[]` | - | 音乐模式选项 |
+
+**关键规则**:
+- 所有外部填充字段都使用 `dataType: 'ENUM'`
+- 所有外部填充字段的 `options` 都是空数组 `[]`
+- **只有 snapshot 需要 `payloadDefine`**
+- lightScene 和 diyScene 不要添加 `payloadDefine`
+
+---
+
 ### 1. lightScene (灯光场景)
 
 **字段位置**: `parameters.options`
@@ -21,7 +40,7 @@
 }
 ```
 
-**错误配置**:
+**错误配置 1 - 编造 options 数据**:
 ```javascript
 {
   parameters: {
@@ -33,6 +52,28 @@
   }
 }
 ```
+
+**错误配置 2 - 添加 payloadDefine**:
+```javascript
+{
+  instance: InstanceEnum.lightScene.value,
+  type: 'devices.capabilities.dynamic_scene',
+  ctrlPlatformSupported: ['openApi'],
+  payloadDefine: {
+    cmdType: 'ptReal'  // ❌ lightScene 不需要 payloadDefine
+  },
+  parameters: {
+    dataType: 'ENUM',
+    options: []
+  }
+}
+```
+
+**关键点**:
+- ✅ 必须使用 `dataType: 'ENUM'`
+- ✅ `options` 必须为空数组 `[]`
+- ❌ 不要添加 `payloadDefine`
+- ❌ 不要编造 options 数据
 
 **说明**: 灯光场景数据由外部场景管理系统提供，不同设备的场景可能不同。
 
@@ -49,13 +90,13 @@
   type: 'devices.capabilities.dynamic_scene',
   ctrlPlatformSupported: ['openApi'],
   parameters: {
-    dataType: 'ENUM',
+    dataType: 'ENUM',  // ✅ 必须是 ENUM
     options: []  // ✅ 必须为空数组，由外部系统填充
   }
 }
 ```
 
-**错误配置**:
+**错误配置 1 - 编造 options 数据**:
 ```javascript
 {
   parameters: {
@@ -68,7 +109,41 @@
 }
 ```
 
-**说明**: DIY 场景由用户自定义，数据格式由外部系统管理。
+**错误配置 2 - 使用 STRUCT 结构**:
+```javascript
+{
+  instance: InstanceEnum.diyScene.value,
+  type: 'devices.capabilities.dynamic_scene',
+  ctrlPlatformSupported: ['openApi'],
+  payloadDefine: {
+    cmdType: 'ptReal'  // ❌ 不需要 payloadDefine
+  },
+  parameters: {
+    dataType: 'STRUCT',  // ❌ 错误！应该是 ENUM
+    fields: [  // ❌ 不需要 fields
+      {
+        fieldName: 'sceneId',
+        dataType: 'INTEGER',
+        required: true
+      },
+      {
+        fieldName: 'sceneData',
+        dataType: 'STRING',
+        required: true
+      }
+    ]
+  }
+}
+```
+
+**关键点**:
+- ✅ 必须使用 `dataType: 'ENUM'`
+- ✅ `options` 必须为空数组 `[]`
+- ❌ 不要添加 `payloadDefine`
+- ❌ 不要使用 `dataType: 'STRUCT'`
+- ❌ 不要添加 `fields` 字段
+
+**说明**: DIY 场景由用户自定义，数据格式由外部系统管理。与 lightScene 和 snapshot 一样，使用简单的 ENUM 结构，options 为空数组。
 
 ---
 
@@ -83,7 +158,7 @@
   type: 'devices.capabilities.dynamic_scene',
   ctrlPlatformSupported: ['openApi'],
   payloadDefine: {
-    cmdType: 'ptReal'
+    cmdType: 'ptReal'  // ✅ snapshot 需要 payloadDefine
   },
   parameters: {
     dataType: 'ENUM',
@@ -92,7 +167,13 @@
 }
 ```
 
-**说明**: 快照功能保存当前设备状态，数据由外部系统管理。
+**关键点**:
+- ✅ 必须使用 `dataType: 'ENUM'`
+- ✅ `options` 必须为空数组 `[]`
+- ✅ **snapshot 需要 `payloadDefine: { cmdType: 'ptReal' }`**（与 lightScene、diyScene 不同）
+- ❌ 不要编造 options 数据
+
+**说明**: 快照功能保存当前设备状态，数据由外部系统管理。snapshot 是唯一需要 payloadDefine 的外部填充字段。
 
 ---
 
@@ -197,8 +278,12 @@
 在配置 SKU 时，检查以下项目：
 
 - [ ] lightScene 的 options 是否为空数组 `[]`
+- [ ] lightScene 是否没有添加 payloadDefine（不需要）
 - [ ] diyScene 的 options 是否为空数组 `[]`
+- [ ] diyScene 是否使用 ENUM 而不是 STRUCT
+- [ ] diyScene 是否没有添加 payloadDefine（不需要）
 - [ ] snapshot 的 options 是否为空数组 `[]`
+- [ ] snapshot 是否包含 `payloadDefine: { cmdType: 'ptReal' }`（需要）
 - [ ] musicMode 的 musicMode 字段 options 是否为空数组 `[]`
 - [ ] musicMode 是否包含完整的 action 配置
 - [ ] 没有编造上述字段的数据

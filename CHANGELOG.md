@@ -2,7 +2,72 @@
 
 ## 2024-03-10 - 重大更新
 
-### 1. goodsType 数据类型规范 ✅
+### 1. lightScene 和 diyScene 配置规范 ✅
+
+**问题**: lightScene 和 diyScene 被错误地添加了 `payloadDefine` 或使用了 STRUCT 结构
+
+**解决方案**:
+- 明确 lightScene 和 diyScene 不需要 `payloadDefine`
+- 只有 snapshot 需要 `payloadDefine: { cmdType: 'ptReal' }`
+- 所有外部填充字段都使用简单的 ENUM 结构
+
+**正确配置对比**:
+
+| 字段 | dataType | options | payloadDefine |
+|------|----------|---------|---------------|
+| lightScene | `ENUM` | `[]` | ❌ 不需要 |
+| diyScene | `ENUM` | `[]` | ❌ 不需要 |
+| snapshot | `ENUM` | `[]` | ✅ `{ cmdType: 'ptReal' }` |
+
+**lightScene 正确配置**:
+```javascript
+{
+  instance: InstanceEnum.lightScene.value,
+  type: 'devices.capabilities.dynamic_scene',
+  ctrlPlatformSupported: ['openApi'],
+  parameters: {
+    dataType: 'ENUM',
+    options: []
+  }
+}
+```
+
+**diyScene 正确配置**:
+```javascript
+{
+  instance: InstanceEnum.diyScene.value,
+  type: 'devices.capabilities.dynamic_scene',
+  ctrlPlatformSupported: ['openApi'],
+  parameters: {
+    dataType: 'ENUM',
+    options: []
+  }
+}
+```
+
+**snapshot 正确配置**:
+```javascript
+{
+  instance: InstanceEnum.snapshot.value,
+  type: 'devices.capabilities.dynamic_scene',
+  ctrlPlatformSupported: ['openApi'],
+  payloadDefine: {
+    cmdType: 'ptReal'  // 只有 snapshot 需要
+  },
+  parameters: {
+    dataType: 'ENUM',
+    options: []
+  }
+}
+```
+
+**更新文档**:
+- `SKILL.md` - 添加错误示例，明确 lightScene 不需要 payloadDefine
+- `external-data-fields.md` - 添加快速对比表和详细错误示例
+
+---
+
+### 2. goodsType 数据类型规范 ✅
 
 **问题**: goodsType 数据类型不明确，可能被错误地配置为字符串
 
@@ -210,8 +275,12 @@ jsbridge-sku-config/
 
 ### 外部填充数据
 - [ ] lightScene 的 options 是否为空数组 `[]`
+- [ ] lightScene 是否没有添加 payloadDefine（不需要）
 - [ ] diyScene 的 options 是否为空数组 `[]`
+- [ ] diyScene 是否使用 ENUM 而不是 STRUCT
+- [ ] diyScene 是否没有添加 payloadDefine（不需要）
 - [ ] snapshot 的 options 是否为空数组 `[]`
+- [ ] snapshot 是否包含 `payloadDefine: { cmdType: 'ptReal' }`（需要）
 - [ ] musicMode 的 musicMode 字段 options 是否为空数组 `[]`
 - [ ] 没有编造上述字段的数据
 
@@ -248,6 +317,15 @@ jsbridge-sku-config/
 
 ## 常见问题
 
+### Q: lightScene 和 diyScene 需要 payloadDefine 吗？
+A: 不需要。只有 snapshot 需要 `payloadDefine: { cmdType: 'ptReal' }`。lightScene 和 diyScene 只需要简单的 ENUM 结构，options 为空数组。
+
+### Q: diyScene 应该使用什么数据类型？
+A: 必须使用 `dataType: 'ENUM'`，不要使用 STRUCT。diyScene 与 lightScene 的结构完全相同，只是 instance 不同。
+
+### Q: 为什么 snapshot 需要 payloadDefine 而其他场景不需要？
+A: snapshot 使用 `cmdType: 'ptReal'` 来处理快照保存操作，而 lightScene 和 diyScene 的数据完全由外部系统管理，不需要特殊的命令类型。
+
 ### Q: goodsType 应该使用什么数据类型？
 A: 如果用户提供了 goodsType，使用数字类型（如：69, 321）；如果用户未提供，使用空字符串 ''。
 
@@ -270,6 +348,7 @@ A: 参考 `device-types.md`，根据设备主要功能选择，默认灯光设�
 
 ## 版本历史
 
+- **v2.2.0** (2024-03-10): 修正 lightScene 和 diyScene 配置规范（不需要 payloadDefine）
 - **v2.1.0** (2024-03-10): 添加 goodsType 数据类型规范
 - **v2.0.0** (2024-03-10): 添加外部填充数据规范、固定 BLE 指令规范、设备类型配置指南系统
 - **v1.1.0** (2024-03-10): 添加制冰机配置指南、Instance 优先级规则

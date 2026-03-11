@@ -145,6 +145,22 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
      }
    }
    ```
+   
+   **❌ 错误 - 不要添加 payloadDefine**:
+   ```javascript
+   {
+     instance: InstanceEnum.lightScene.value,
+     type: 'devices.capabilities.dynamic_scene',
+     ctrlPlatformSupported: ['openApi'],
+     payloadDefine: {
+       cmdType: 'ptReal'  // ❌ lightScene 不需要
+     },
+     parameters: {
+       dataType: 'ENUM',
+       options: []
+     }
+   }
+   ```
 
 2. **diyScene** (DIY 场景)
    ```javascript
@@ -153,8 +169,28 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
      type: 'devices.capabilities.dynamic_scene',
      ctrlPlatformSupported: ['openApi'],
      parameters: {
-       dataType: 'ENUM',
+       dataType: 'ENUM',  // ✅ 必须是 ENUM，不是 STRUCT
        options: []  // 外部填充，保持为空数组
+     }
+   }
+   ```
+   
+   **❌ 常见错误 - 不要使用 STRUCT 结构**:
+   ```javascript
+   // ❌ 错误示例：不要这样配置 diyScene
+   {
+     instance: InstanceEnum.diyScene.value,
+     type: 'devices.capabilities.dynamic_scene',
+     ctrlPlatformSupported: ['openApi'],
+     payloadDefine: {
+       cmdType: 'ptReal'  // ❌ 不需要
+     },
+     parameters: {
+       dataType: 'STRUCT',  // ❌ 错误！应该是 ENUM
+       fields: [  // ❌ 不需要 fields
+         { fieldName: 'sceneId', dataType: 'INTEGER', required: true },
+         { fieldName: 'sceneData', dataType: 'STRING', required: true }
+       ]
      }
    }
    ```
@@ -166,7 +202,7 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
      type: 'devices.capabilities.dynamic_scene',
      ctrlPlatformSupported: ['openApi'],
      payloadDefine: {
-       cmdType: 'ptReal'
+       cmdType: 'ptReal'  // ✅ snapshot 需要 payloadDefine
      },
      parameters: {
        dataType: 'ENUM',
@@ -174,6 +210,8 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
      }
    }
    ```
+   
+   **注意**: snapshot 是唯一需要 `payloadDefine` 的外部填充字段。
 
 4. **musicMode** 的 musicMode 字段
    ```javascript
@@ -186,7 +224,11 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
    ```
 
 ⚠️ **关键点**:
+- lightScene、diyScene、snapshot 的 **dataType 必须是 'ENUM'**
 - lightScene、diyScene、snapshot 的 options 必须为空数组 `[]`
+- **lightScene 和 diyScene 不要添加 payloadDefine**
+- **只有 snapshot 需要 `payloadDefine: { cmdType: 'ptReal' }`**
+- **diyScene 不要使用 STRUCT 结构**
 - musicMode 的 musicMode 字段 options 必须为空数组 `[]`
 - **musicMode 必须包含完整的 action 配置**（即使 options 为空）
 - 不要编造这些字段的数据
@@ -207,8 +249,9 @@ description: "智能设备 SKU 配置专家，基于模板快速创建新的设�
 - `lightScene` (options 为空数组，外部填充)
 - `diyScene` (options 为空数组，外部填充)
 - `snapshot` (options 为空数组，外部填充)
+- `dreamViewToggle` (盛宴开关，cmdType: ptReal，特殊处理)
 
-这些 instance 使用标准 cmdType，**不需要配置 action**。
+这些 instance 使用标准 cmdType 或有内置处理逻辑，**不需要配置 action**。
 
 **需要 action 配置的能力**:
 - `segmentedColorRgb`, `segmentedBrightness`
